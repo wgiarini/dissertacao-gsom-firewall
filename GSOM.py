@@ -70,7 +70,7 @@ def init_grid (input, initial_width = 2, initial_height = 2, sf = 0.3, alfa = 0.
     None
     """
 
-    samples_size = len(input[0])   # primeira alteracao: esse valor deve ser alterado de input[0] para input 
+    samples_size = len(input[0])  
     number_samples = len(input)
 
     global weights
@@ -83,7 +83,7 @@ def init_grid (input, initial_width = 2, initial_height = 2, sf = 0.3, alfa = 0.
     acumulated_error = []  
     
     global gt
-    gt = -number_samples * log(sf)              # alterei aqui por causa da primeira alteracao 
+    gt = -number_samples * log(sf)           
     
     global fd
     fd = 0.5
@@ -180,11 +180,9 @@ def start_growing_phase (input, epochs):
                 if not boundary:
                     spread_error(winner)
                 else:
-                    for b in boundary:              # aqui está errado: está criando todos os que dá ao invés de um só!
-                        # print("No neuronio", winner, 'criou', (int+1), 'Sneuronios')
+                    for b in boundary: 
                         grow (winner, b)
                         acumulated_error[winner] = 0
-        # print("time:" + str(time.time() - ts) + " seconds")
     
     return
     
@@ -228,12 +226,8 @@ def start_smoothing_phase (input, epochs):
             
             # find the best matching unit
             bmu = find_best_matching_unit(sample)
-            # print("O bmu dessa vez eh: ", bmu)
             winner = bmu["winner"]
             error =  bmu["error"]
-
-            #Pode ser troacado por:
-            # winner, error = find_best_matching_unit(sample).values()
 
             # update the winner and the neighborhood
             update_neighborhood(winner, sample, i, growing=False)
@@ -514,7 +508,7 @@ def add_weight(neuron, boundary):
     #     # new_weights.append(weights[neuron][i] + abs(weights[neuron][i] - weights[neuron2][i]))
     #     new_weights.append(weights[neuron][i] + sqrt(weights[neuron][i]**2 + weights[neuron2][i]**2))
     
-    if (caseB):     # deiaxr ele primeiro para não correr o erro de cair no caso C erroneamente   
+    if (caseB):  
         for i in range(len(weights[0])):
             new_weights.append( (weights[neuron][i] + weights[neuron2][i]) / 2)
 
@@ -873,7 +867,7 @@ def get_neuron_labels_monorotulo(input, input_labels, factor=0.5, include=False)
         neuron_times_selected.append(0)
     
     for i in range(len(input)):
-        bmu = find_best_matching_unit(input[i])  # Encontra o Best Matching Unit (neurônio vencedor)
+        bmu = find_best_matching_unit(input[i]) 
         winner = bmu['winner']
         
         frequency[winner][input_labels[i]] += 1
@@ -882,11 +876,11 @@ def get_neuron_labels_monorotulo(input, input_labels, factor=0.5, include=False)
     label_weigths = dict()
 
     for i in range(len(frequency)):
-        if neuron_times_selected[i] == 0:  # Evitar divisão por zero
+        if neuron_times_selected[i] == 0:  
             continue
 
-        max_label = max(frequency[i], key=frequency[i].get)  # Rótulo com maior frequência
-        label_weigths[i] = max_label  # Atribuir o rótulo mais frequente ao neurônio
+        max_label = max(frequency[i], key=frequency[i].get) 
+        label_weigths[i] = max_label 
 
     return label_weigths
 
@@ -978,7 +972,7 @@ def get_neuron_labels_mutilabel_list(input, labels_as_list, factor=0.5, include=
     
     return r_list
     
-def get_labels(input, predicted_labels):          # pega um conjunto de dados e diz sua classe, X_test, y_predidas_pelo_algoritmo
+def get_labels(input, predicted_labels):        
     """
     Return predicted labels to input data.
 
@@ -1311,13 +1305,10 @@ def model_validation(nome, X_train, y_train, X_validation, y_validation, growing
     neuron_labels_list = get_neuron_labels_mutilabel_list(X_train, y_train)
     y_test_predicted = get_labels(X_validation, neuron_labels_list) 
 
-    # Calcular as curvas de precisão-recall para cada classe
     precision, recall, _ = metrics.precision_recall_curve(y_validation.ravel(), np.array(y_test_predicted).ravel())
 
-    # Calcular a AUPRC para cada classe
     auprc = metrics.auc(recall, precision)
 
-    # Calcular a média da AUPRC para todas as classes
     mean_curve = auprc.mean()
     
     print('Time:', time_)
@@ -1463,15 +1454,10 @@ def find_best_sf(X_train, X_test, y_train, y_test, n_growing, n_smoothing, sf_li
         comparacao.append(melhor_caso)
         comparacao_index.append(melhor_index)
 
-    # print(f'maior valor: {max(comparacao)}')
-    # index_melhor_resultado = comparacao.index(max(comparacao))
     index_melhor_externo = comparacao.index(max(comparacao))
     index_melhor_interno = comparacao_index[index_melhor_externo]
     print(each_alpha)
-    # print(f'Valor de index externo {index_melhor_externo}')
-    # print(f'Valor de index interno {index_melhor_interno}')
     melhor_resultado = each_alpha[index_melhor_externo][index_melhor_interno]
-    # melhor_resultado = each_alpha[int(index_melhor_resultado/len(each_alpha))][index_melhor_resultado % len(each_alpha)]    # encontra melhor lista e melhor elemento
     melhor_resultado.insert(0, int(index_melhor_externo + 1) * sf_list[0])       # valor de sf
 
     # print(f'Melhor resultado: {melhor_resultado}')
