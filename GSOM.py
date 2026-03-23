@@ -17,57 +17,6 @@ import sklearn.metrics as metrics
 import statistics as s
 import multiprocessing
 
-# Definir as classes fixas para os neurônios 0, 1, 2 e 3
-fixed_neuron_labels = {0: 0, 1: 1, 2: 2, 3: 3}
-
-
-def get_neuron_labels_multiclass(input, input_labels, factor=0.5, include=False):
-    neuron_labels = dict()
-    frequency = dict()
-    neuron_times_selected = list()
-
-    # Inicializa a frequência dos rótulos para cada neurônio
-    for i in range(len(weights)):  # weights representa os neurônios na rede
-        frequency[i] = {label: 0 for label in np.unique(input_labels)}  # Inicializa as frequências para cada label
-        neuron_times_selected.append(0)
-    
-    # Contar a frequência dos rótulos para cada neurônio
-    for i in range(len(input)):
-        bmu = find_best_matching_unit(input[i])  # Encontra o Best Matching Unit (neurônio vencedor)
-        winner = bmu['winner']
-        
-        # Aumenta a contagem do rótulo correspondente no neurônio vencedor
-        frequency[winner][input_labels[i]] += 1
-        neuron_times_selected[winner] += 1
-    
-    # Determinar o rótulo (ou rótulos) mais frequente(s) para cada neurônio
-    for i in range(len(frequency)):
-        if neuron_times_selected[i] == 0:  # Evitar divisão por zero
-            continue
-
-        # Verificar se o neurônio está nas classes fixas
-        if i in fixed_neuron_labels:
-            neuron_labels[i] = fixed_neuron_labels[i]  # Manter a classe fixa
-        else:
-            # Atribuir rótulos de acordo com o fator
-            total_selections = neuron_times_selected[i]
-            class_ratios = {label: freq / total_selections for label, freq in frequency[i].items()}
-
-            # Escolher os rótulos com frequência acima do fator
-            dominant_classes = [label for label, ratio in class_ratios.items() if ratio >= factor]
-            
-            # Se nenhum rótulo atingir o fator, selecionar o rótulo mais frequente
-            if not dominant_classes:
-                dominant_classes = [max(frequency[i], key=frequency[i].get)]
-            
-            # Incluir todos os rótulos acima do fator ou apenas o mais frequente
-            if include:
-                neuron_labels[i] = dominant_classes  # Lista de classes dominantes
-            else:
-                neuron_labels[i] = dominant_classes[0]  # Apenas a classe mais frequente
-    
-    return neuron_labels
-
 
 def fit(input, initial_width = 2, initial_height = 2, sf = 0.3, alfa = 0.01, epochs_growing=10, epochs_smoothing=5):
     """Fit's the data in the algoritm
@@ -763,26 +712,20 @@ def plot_gsom_map(gsom, neuron_labels):
         Dicionário contendo as etiquetas associadas a cada neurônio.
     """
     
-    # Verificar se o GSOM possui pesos
     if not hasattr(gsom, 'weights'):
         print("O GSOM não possui o atributo 'weights'. Verifique a implementação.")
         return
     
-    # Obter as coordenadas dos neurônios no grid
-    neuron_positions = gsom.weights  # Assumindo que o atributo 'weights' contém as posições dos neurônios
+    neuron_positions = gsom.weights 
     
-    # Separar coordenadas x e y (dependendo da estrutura de weights, ajuste aqui)
     x_coords = [pos[0] for pos in neuron_positions]
     y_coords = [pos[1] for pos in neuron_positions]
     
-    # Obter as etiquetas dos neurônios
     labels = [neuron_labels.get(i, '') for i in range(len(neuron_positions))]
     
-    # Criar o scatter plot
     plt.figure(figsize=(8, 8))
     scatter = plt.scatter(x_coords, y_coords, c='blue', marker='o')
     
-    # Adicionar etiquetas aos neurônios
     for i, label in enumerate(labels):
         plt.text(x_coords[i], y_coords[i], label, fontsize=9, ha='right')
 
@@ -925,23 +868,19 @@ def get_neuron_labels_monorotulo(input, input_labels, factor=0.5, include=False)
     frequency = dict()
     neuron_times_selected = list()
 
-    # Criar um vetor de frequências (um dicionário para contar a frequência de cada rótulo em cada neurônio)
-    for i in range(len(weights)):  # weights representa os neurônios na rede
-        frequency[i] = {label: 0 for label in np.unique(input_labels)}  # Inicializa as frequências para cada label
+    for i in range(len(weights)):  
+        frequency[i] = {label: 0 for label in np.unique(input_labels)}  
         neuron_times_selected.append(0)
     
-    # Contar a frequência dos rótulos para cada neurônio
     for i in range(len(input)):
         bmu = find_best_matching_unit(input[i])  # Encontra o Best Matching Unit (neurônio vencedor)
         winner = bmu['winner']
         
-        # Aumenta a contagem do rótulo correspondente no neurônio vencedor
         frequency[winner][input_labels[i]] += 1
         neuron_times_selected[winner] += 1
     
     label_weigths = dict()
 
-    # Determinar o rótulo mais frequente em cada neurônio
     for i in range(len(frequency)):
         if neuron_times_selected[i] == 0:  # Evitar divisão por zero
             continue
@@ -976,12 +915,10 @@ def get_neuron_labels_mutilabel (input, input_labels, factor=0.5, include=False)
     frequency = dict()
     neuron_times_selected = list()
 
-    # cria um vetor de frequências
     for i in range(len(weights)):
         frequency[i] = { i : 0 for i in range(len(input_labels[0])) }
         neuron_times_selected.append(0)
     
-    # conta a frequência, sendo que cada vez que a label de um neurônio é 1, a frequência neste neurônio é acrescentada
     for i in range(len(input)):
         
         bmu = find_best_matching_unit(input[i])
@@ -1069,7 +1006,7 @@ def get_labels(input, predicted_labels):          # pega um conjunto de dados e 
 
     return labels
 
-def get_winner_neurons(input):    # diz os neurônios vencadores para cada dado de entrada
+def get_winner_neurons(input):  
     """
     Return the winner neurons for each data.
 
@@ -1219,7 +1156,6 @@ def performace_measures_monorotulo(y_real, y_predicted, show=False):
     FP = 0  # Falso Positivo
     FN = 0  # Falso Negativo
 
-    # Verifica os valores reais e preditos
     for i in range(len(y_real)):
         if y_real[i] == 1:
             if y_predicted[i] == 1: 
@@ -1239,7 +1175,6 @@ def performace_measures_monorotulo(y_real, y_predicted, show=False):
     f1_score = 2 * precision * recall / (precision + recall) if (precision + recall) != 0 else 0
     hamming_loss = (FP + FN) / len(y_real)
 
-    # Exibe as métricas, se necessário
     if show:
         print("Accuracy: {0:.2%}".format(accuracy))
         print("Precision: {0:.2%}".format(precision)) 
@@ -1518,9 +1453,7 @@ def find_best_sf(X_train, X_test, y_train, y_test, n_growing, n_smoothing, sf_li
 
         each_alpha.append(pool.map(find_alpha, valor_iteracoes))
 
-        # melhor_valor = max([sub[-1] for sub in each_alpha[j]])
-        # comparacao.append([each_alpha[j].index(melhor_valor), melhor_valor])
-        # comparacao.append(max(sublista[-1] for lista_exterior in each_alpha for sublista in lista_exterior))      # Pega o caso para o maior alpha
+     
         melhor_caso = 0
         melhor_index = 0
         for (k, item) in enumerate(each_alpha[j]):
