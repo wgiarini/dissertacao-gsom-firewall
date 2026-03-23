@@ -20,52 +20,8 @@ import multiprocessing
 # Definir as classes fixas para os neurônios 0, 1, 2 e 3
 fixed_neuron_labels = {0: 0, 1: 1, 2: 2, 3: 3}
 
-def get_neuron_labels_monorotulo_fixed(input, input_labels, factor=0.5, include=False):
-    '''
-    Modificado para manter os neurônios fixos.
-    Retorna os rótulos previstos para cada neurônio com base em dados de rótulo monorótulo.
-    '''
-    
-    neuron_labels = dict()
-    frequency = dict()
-    neuron_times_selected = list()
-
-    # Criar um vetor de frequências (um dicionário para contar a frequência de cada rótulo em cada neurônio)
-    for i in range(len(weights)):  # weights representa os neurônios na rede
-        frequency[i] = {label: 0 for label in np.unique(input_labels)}  # Inicializa as frequências para cada label
-        neuron_times_selected.append(0)
-    
-    # Contar a frequência dos rótulos para cada neurônio
-    for i in range(len(input)):
-        bmu = find_best_matching_unit(input[i])  # Encontra o Best Matching Unit (neurônio vencedor)
-        winner = bmu['winner']
-        
-        # Aumenta a contagem do rótulo correspondente no neurônio vencedor
-        frequency[winner][input_labels[i]] += 1
-        neuron_times_selected[winner] += 1
-    
-    label_weigths = dict()
-
-    # Determinar o rótulo mais frequente em cada neurônio
-    for i in range(len(frequency)):
-        if neuron_times_selected[i] == 0:  # Evitar divisão por zero
-            continue
-
-        # Verificar se o neurônio está nas classes fixas
-        if i in fixed_neuron_labels:
-            label_weigths[i] = fixed_neuron_labels[i]  # Manter a classe fixa
-        else:
-            max_label = max(frequency[i], key=frequency[i].get)  # Rótulo com maior frequência
-            label_weigths[i] = max_label  # Atribuir o rótulo mais frequente ao neurônio
-
-    return label_weigths
-
 
 def get_neuron_labels_multiclass(input, input_labels, factor=0.5, include=False):
-    """
-    Modificado para manter os neurônios fixos.
-    Retorna os rótulos previstos para cada neurônio com base em dados de rótulo multiclasse.
-    """
     neuron_labels = dict()
     frequency = dict()
     neuron_times_selected = list()
@@ -111,51 +67,6 @@ def get_neuron_labels_multiclass(input, input_labels, factor=0.5, include=False)
                 neuron_labels[i] = dominant_classes[0]  # Apenas a classe mais frequente
     
     return neuron_labels
-
-def get_neuron_labels_multiclass_2(input, input_labels, factor=0.5, include=False):
-    """
-    Modificado para lidar com o crescimento dinâmico de neurônios no GSOM.
-    """
-    neuron_labels = dict()
-    frequency = dict()
-    neuron_times_selected = list()
-
-    # Atualizar frequência e inicializar neurônios dinamicamente
-    current_num_neurons = len(weights)  # Número atual de neurônios
-    for i in range(current_num_neurons):
-        if i not in frequency:
-            frequency[i] = {label: 0 for label in np.unique(input_labels)}
-            neuron_times_selected.append(0)
-    
-    # Contar a frequência dos rótulos para cada neurônio
-    for i in range(len(input)):
-        bmu = find_best_matching_unit(input[i])  # Encontra o BMU
-        winner = bmu['winner']
-        
-        frequency[winner][input_labels[i]] += 1
-        neuron_times_selected[winner] += 1
-    
-    # Determinar rótulos dos neurônios
-    for i in range(current_num_neurons):
-        if neuron_times_selected[i] == 0:  # Neurônios não selecionados
-            neuron_labels[i] = 'undefined'  # Ou outra lógica de rótulo
-            continue
-
-        # Verificar neurônios fixos
-        if i in fixed_neuron_labels:
-            neuron_labels[i] = fixed_neuron_labels[i]
-        else:
-            total_selections = neuron_times_selected[i]
-            class_ratios = {label: freq / total_selections for label, freq in frequency[i].items()}
-            dominant_classes = [label for label, ratio in class_ratios.items() if ratio >= factor]
-            
-            if not dominant_classes:
-                dominant_classes = [max(frequency[i], key=frequency[i].get)]
-            
-            neuron_labels[i] = dominant_classes if include else dominant_classes[0]
-    
-    return neuron_labels
-
 
 
 def fit(input, initial_width = 2, initial_height = 2, sf = 0.3, alfa = 0.01, epochs_growing=10, epochs_smoothing=5):
@@ -1009,26 +920,7 @@ def plot_confusion_matrix(cm, classes, title='Confusion Matrix', cmap=plt.cm.Blu
     plt.show()
 
 
-def get_neuron_labels_monorotulo(input, input_labels, factor=0.5, include=False):
-    '''    
-    Retorna os rótulos previstos para cada neurônio com base em dados de rótulo monorótulo.
-
-    Parameters:
-    --------
-        input : numpy
-            Os dados usados para criar a rede (X_train)
-        input_labels : numpy 
-            Os rótulos dos dados de entrada (y_train) - monorótulo
-        factor : float
-            O limiar usado
-        include : boolean
-            Se True, retornará o resultado sem considerar o limiar
-    Returns
-    --------
-        label_weigths: dict
-            Os rótulos atribuídos a cada neurônio
-    '''
-    
+def get_neuron_labels_monorotulo(input, input_labels, factor=0.5, include=False):    
     neuron_labels = dict()
     frequency = dict()
     neuron_times_selected = list()
